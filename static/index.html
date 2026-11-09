@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Line Materials Inspector</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; margin: 0; padding: 16px; max-width: 640px; margin: auto; }
+  h1 { font-size: 1.2rem; }
+  label { display: block; margin: 12px 0 4px; font-weight: 600; }
+  input[type=text], input[type=file] { width: 100%; box-sizing: border-box; padding: 8px; font-size: 1rem; }
+  button { margin-top: 16px; width: 100%; padding: 14px; font-size: 1rem; background: #0f62fe; color: #fff; border: 0; border-radius: 6px; }
+  img { width: 100%; margin-top: 16px; border-radius: 6px; }
+  pre { background: #f4f4f4; padding: 12px; border-radius: 6px; font-size: 1.1rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  td, th { border-bottom: 1px solid #ddd; padding: 6px; text-align: left; }
+  .over, .missing { color: #da1e28; font-weight: 600; }
+  .match { color: #198038; }
+</style>
+</head>
+<body>
+<h1>Line Materials Inspector</h1>
+<label for="photo">Photo (opens camera on phones)</label>
+<input id="photo" type="file" accept="image/*" capture="environment">
+<label for="pole">Pole ID (optional)</label>
+<input id="pole" type="text" placeholder="e.g. P-1024">
+<label for="exp">Expected materials (optional, JSON)</label>
+<input id="exp" type="text" placeholder='{"633444": 6, "600177": 1}'>
+<button id="go">Detect &amp; count</button>
+<div id="out"></div>
+<script>
+document.getElementById("go").onclick = async () => {
+  const f = document.getElementById("photo").files[0];
+  const out = document.getElementById("out");
+  if (!f) { out.textContent = "Take or choose a photo first."; return; }
+  const fd = new FormData();
+  fd.append("image", f);
+  const pole = document.getElementById("pole").value.trim();
+  const exp = document.getElementById("exp").value.trim();
+  if (pole) fd.append("pole_id", pole);
+  if (exp) fd.append("expected", exp);
+  out.textContent = "Analyzing...";
+  const r = await fetch("/api/detect", { method: "POST", body: fd });
+  if (!r.ok) { out.textContent = "Error: " + (await r.text()); return; }
+  const d = await r.json();
+  let html = `<img src="${d.annotated_image}"><h3>List of materials</h3><pre>${d.materials.join("\n") || "(none detected)"}</pre>`;
+  if (d.discrepancies) {
+    html += "<h3>Discrepancies</h3><table><tr><th>Code</th><th>Expected</th><th>Detected</th><th>Status</th></tr>" +
+      d.discrepancies.map(x => `<tr><td>${x.code}</td><td>${x.expected}</td><td>${x.detected}</td><td class="${x.status}">${x.status}</td></tr>`).join("") + "</table>";
+  }
+  out.innerHTML = html;
+};
+</script>
+</body>
+</html>

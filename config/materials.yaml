@@ -1,0 +1,14 @@
+# Maps detector class names (must match the names inside models/tic_small.pt) to material codes.
+# 633444 is the insulator code from the sample screenshot; Tower/Conductors codes are placeholders.
+min_confidence: 0.5
+
+materials:
+  Insulator:
+    code: "633444"
+    description: Insulator
+  Tower:
+    code: "TOWER"
+    description: Tower
+  Conductors:
+    code: "CONDUCTOR"
+    description: Conductors

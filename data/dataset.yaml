@@ -1,0 +1,5 @@
+path: /Users/cristenleitolentino/ibmbob-cv-visualinspect/data/dataset
+train: images/train
+val: images/val
+names:
+  0: insulator
